@@ -1,6 +1,7 @@
 #include "mythread.h"
 
 extern std::vector<QByteArray> players;
+extern std::vector<QThread*> threads;
 
 MyThread::MyThread(qintptr ID, QObject *parent, int number) :
     QThread(parent)
@@ -31,6 +32,17 @@ void MyThread::run()
     connect(socket, SIGNAL(readyRead()), this, SLOT(readyRead()), Qt::DirectConnection);
     connect(socket, SIGNAL(disconnected()), this, SLOT(disconnected()));
 
+    threads[number] = this;
+
+    if (number == 0) {
+        qDebug() << "waiting for second thread pointer";
+        while (threads[1] == nullptr) {
+            ;
+        }
+    }
+
+    connect(this, SIGNAL(notifyThread()), threads[1 - number], SLOT(sendDataToClient()), Qt::AutoConnection);
+
     // We'll have multiple clients, we want to know which is which
     qDebug() << socketDescriptor << " Client connected";
 
@@ -49,41 +61,28 @@ void MyThread::readyRead()
     // get the information
     QByteArray Data = socket->readAll();
 
-    Test test(0, 0);
-    if (number == 0) {
-        test.number1 = 0;
-        test.number2 = 1;
-    }
-    if (number == 1) {
-        test.number1 = 2;
-        test.number2 = 3;
-    }
-
-    QDataStream(&Data, QIODevice::WriteOnly);
-
     // will write on server side window
     qDebug() << socketDescriptor << " Data in: " << Data;
-    qDebug() << socketDescriptor << "test 0: " << players[0];
-    qDebug() << socketDescriptor << "test 1: " << players[1];
-    //qDebug() << socketDescriptor << "my number: " << this->number;
 
     // Append data to other player's cell.
     players[1 - number].clear();
     players[1 - number].append(Data);
 
-    // Wait until second player sends something.
-//    while (players[number].isNull()) {
-//        true;
-//    }
-    // Echo data to client
-    socket->write(players[number]);
+    //socket->write(players[number]);
+    emit(notifyThread());
 }
 
 void MyThread::disconnected()
 {
     qDebug() << socketDescriptor << " Disconnected";
-
-
     socket->deleteLater();
     exit(0);
+}
+
+void MyThread::sendDataToClient() {
+    qDebug() << "send data to client slot";
+    qDebug() << "my number: " << number;
+    qDebug() << "socket descriptor: " << socketDescriptor;
+    qDebug() << "players: " << players[number];
+    socket->write(players[number]);
 }

@@ -28,10 +28,14 @@ public:
 
 signals:
     void error(QTcpSocket::SocketError socketerror);
+    void notifyThread();
+    void notifyFirstThread();
+    void notifySecondThread();
 
 public slots:
     void readyRead();
     void disconnected();
+    void sendDataToClient();
 
 private:
     QTcpSocket *socket;

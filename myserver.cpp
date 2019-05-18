@@ -4,6 +4,7 @@
 #include "mythread.h"
 
 std::vector<QByteArray> players;
+std::vector<QThread*> threads;
 
 MyServer::MyServer(QObject *parent) :
     QTcpServer(parent)
@@ -12,10 +13,12 @@ MyServer::MyServer(QObject *parent) :
 
 void MyServer::startServer()
 {
-    int port = 1238;
+    int port = 1235;
     players.resize(2);
     players[0] = QByteArray();
     players[1] = QByteArray();
+    threads.push_back(nullptr);
+    threads.push_back(nullptr);
 
     if(!this->listen(QHostAddress::Any, port))
     {
