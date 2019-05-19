@@ -1,9 +1,9 @@
 #include "mythread.h"
 
 extern std::vector<QByteArray> players;
-extern std::vector<QThread*> threads;
+extern std::vector<MyThread*> threads;
 
-MyThread::MyThread(qintptr ID, QObject *parent, int number) :
+MyThread::MyThread(qintptr ID, int number, QObject *parent) :
     QThread(parent)
 {
     this->socketDescriptor = ID;
@@ -41,7 +41,7 @@ void MyThread::run()
         }
     }
 
-    connect(this, SIGNAL(notifyThread()), threads[1 - number], SLOT(sendDataToClient()), Qt::AutoConnection);
+    connect(this, SIGNAL(notifyThread()), threads[1 - number], SLOT(sendDataToClient()), Qt::QueuedConnection);
 
     // We'll have multiple clients, we want to know which is which
     qDebug() << socketDescriptor << " Client connected";
@@ -52,7 +52,9 @@ void MyThread::run()
     QByteArray player_number;
     QDataStream stream(&player_number, QIODevice::WriteOnly);
     stream << number;
-    socket->write(player_number);
+    qDebug() << "player number: " << player_number;
+    std::string str = std::to_string(number);
+    socket->write(str.c_str());
     exec();
 }
 
@@ -84,5 +86,6 @@ void MyThread::sendDataToClient() {
     qDebug() << "my number: " << number;
     qDebug() << "socket descriptor: " << socketDescriptor;
     qDebug() << "players: " << players[number];
+    //socket = new QTcpSocket();
     socket->write(players[number]);
 }

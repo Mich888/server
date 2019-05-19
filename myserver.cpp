@@ -39,7 +39,8 @@ void MyServer::incomingConnection(qintptr socketDescriptor)
     qDebug() << socketDescriptor << " Connecting...";
 
     // Every new connection will be run in a newly created thread
-    MyThread *thread = new MyThread(socketDescriptor, this, player_number);
+    MyThread *thread = new MyThread(socketDescriptor, player_number);
+    thread->moveToThread(thread);
     player_number++;
 
     // connect signal/slot

@@ -5,6 +5,8 @@
 #include <QTcpSocket>
 #include <QDebug>
 #include <QDataStream>
+#include <string>
+#include <stdlib.h>
 
 class Test {
 public:
@@ -22,8 +24,7 @@ class MyThread : public QThread
 {
     Q_OBJECT
 public:
-    explicit MyThread(qintptr ID, QObject *parent = 0, int number = -1);
-
+    explicit MyThread(qintptr ID, int number = -1, QObject *parent = 0);
     void run();
 
 signals:
